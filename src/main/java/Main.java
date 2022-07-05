@@ -10,6 +10,7 @@ import io.swagger.client.model.AuthLoginBody;
 import io.swagger.client.model.AuthSignupBody;
 
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 public class Main {
     public static final String MY_API_KEY = "5e0d5a706f7e5399ab0f5486fb91b06b2d40ab5c";
@@ -21,6 +22,8 @@ public class Main {
     public static long start = 0;
     public static String tracks;
     public static boolean isFirstCall = true;
+
+    public static String profile;
 
     public static void main(String[] args) {
         authAPIKey();
@@ -44,8 +47,9 @@ public class Main {
             }
             break;
         }
-        while (true) {
-            System.out.println("1-Profile\n2-Tracks");
+        flag = true;
+        while (flag) {
+            System.out.println("1-Profile\n2-Tracks\n3-Playlists\n4-Logout\n5-Exit");
             choice = input.nextInt();
             switch (choice) {
                 case 1: {
@@ -54,6 +58,18 @@ public class Main {
                 break;
                 case 2: {
                     tracksProcess();
+                }
+                break;
+                case 3: {
+                    playlistsProcess();
+                }
+                break;
+                case 4: {
+                    logoutProcess();
+                }
+                break;
+                case 5: {
+                    flag = false;
                 }
                 break;
             }
@@ -73,7 +89,7 @@ public class Main {
     public static void apiCheck() {
         try {
             defaultApi.ping();
-            if(defaultApi.reset().isSuccess()){
+            if (defaultApi.reset().isSuccess()) {
                 System.out.println("API is working");
             }
         } catch (ApiException apiException) {
@@ -113,9 +129,18 @@ public class Main {
     public static boolean signupProcess() {
         Scanner input = new Scanner(System.in);
         System.out.println("Enter username:");
-        String username = input.next();
-        System.out.println("Enter password:");
-        String password = input.next();
+        String username = input.next(), password = "";
+
+        boolean flag = true;
+        while (flag) {
+            System.out.println("Enter password:");
+            password = input.next();
+            if (validatePassword(password) != null) {
+                flag = false;
+            } else {
+                System.out.println("Password must be at least 8 characters long and contain at least one number, one uppercase and one lowercase letter");
+            }
+        }
 
         String token = "";
         try {
@@ -138,11 +163,22 @@ public class Main {
         }
     }
 
+    public static String validatePassword(String value) {
+        Pattern regex = Pattern.compile("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$");
+        if (regex.matcher(value).matches()) {
+            return value;
+        } else {
+            return null;
+        }
+    }
+
+
     public static void profileProcess() {
         long currentTime = System.currentTimeMillis() / 1000;
         if (currentTime - start > 20 || isFirstCall) {
             try {
-                System.out.println(usersApi.getProfileInfo().toString());
+                profile = usersApi.getProfileInfo().toString();
+                System.out.println(profile);
                 start = System.currentTimeMillis() / 1000;
                 isFirstCall = false;
             } catch (ApiException apiException) {
@@ -150,14 +186,13 @@ public class Main {
                 isFirstCall = false;
             }
         } else {
-            //cached data
-            System.out.println();
+            System.out.println(profile);
         }
     }
 
     public static void tracksProcess() {
         long currentTime = System.currentTimeMillis() / 1000;
-        if (currentTime - start > 20) {
+        if (currentTime - start > 20 || isFirstCall) {
             try {
                 tracks = usersApi.getTracksInfo().toString();
                 System.out.println(tracks);
@@ -168,5 +203,13 @@ public class Main {
         } else {
             System.out.println(tracks);
         }
+    }
+
+    public static void playlistsProcess() {
+
+    }
+
+    public static void logoutProcess() {
+
     }
 }
