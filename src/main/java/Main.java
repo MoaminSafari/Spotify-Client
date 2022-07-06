@@ -200,8 +200,13 @@ public class Main {
             }
             isFirstCall = false;
         } else {
-            System.out.println("Username: " + profile.getUsername());
-            System.out.println("Premium Until: " + profile.getPremiumUntil());
+            try {
+                System.out.println("Username: " + profile.getUsername());
+                System.out.println("Premium Until: " + profile.getPremiumUntil());
+            } catch (NullPointerException e) {
+                System.out.println(ANSI_RED + ANSI_RED + "There is no data. Please wait 20 seconds" + ANSI_RESET
+                        + ANSI_RESET);
+            }
         }
     }
 
@@ -224,14 +229,19 @@ public class Main {
                 System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
             }
         } else {
-            for (Track track : tracks) {
-                if (track.isIsPremium() == false
-                        || (track.isIsPremium() == true && profile.getPremiumUntil() != null)) {
-                    System.out.println("Name: " + track.getName());
-                    System.out.println("Artist: " + track.getArtist());
-                    System.out.println("ID: " + track.getId());
-                    System.out.println();
+            try {
+                for (Track track : tracks) {
+                    if (track.isIsPremium() == false
+                            || (track.isIsPremium() == true && profile.getPremiumUntil() != null)) {
+                        System.out.println("Name: " + track.getName());
+                        System.out.println("Artist: " + track.getArtist());
+                        System.out.println("ID: " + track.getId());
+                        System.out.println();
+                    }
                 }
+            } catch (NullPointerException e) {
+                System.out.println(ANSI_RED + ANSI_RED + "There is no data. Please wait 20 seconds" + ANSI_RESET
+                        + ANSI_RESET);
             }
         }
     }
@@ -295,16 +305,20 @@ public class Main {
             }
             isFirstCall = false;
         } else {
-            for (Playlist playlist : currentUser.playlists) {
-                System.out.println("Name: " + playlist.getName());
-                System.out.println("ID: " + playlist.getId());
-                System.out.println("Tracks: {");
-                for (Track track : playlist.getTracks()) {
-                    System.out.println("Name: " + track.getName());
-                    System.out.println("Artist: " + track.getArtist());
-                    System.out.println("ID: " + track.getId());
+            try {
+                for (Playlist playlist : currentUser.playlists) {
+                    System.out.println("Name: " + playlist.getName());
+                    System.out.println("ID: " + playlist.getId());
+                    System.out.println("Tracks: {");
+                    for (Track track : playlist.getTracks()) {
+                        System.out.println("Name: " + track.getName());
+                        System.out.println("Artist: " + track.getArtist());
+                        System.out.println("ID: " + track.getId());
+                    }
+                    System.out.println("}");
                 }
-                System.out.println("}");
+            } catch (NullPointerException e) {
+                System.out.println(ANSI_RED + "There is no data. Please wait 20 seconds" + ANSI_RESET);
             }
         }
 
@@ -426,8 +440,12 @@ public class Main {
             }
             isFirstCall = false;
         } else {
-            for (String friend : currentUser.friends) {
-                System.out.println("Name: " + friend);
+            try {
+                for (String friend : currentUser.friends) {
+                    System.out.println("Name: " + friend);
+                }
+            } catch (NullPointerException e) {
+                System.out.println(ANSI_RED + "There is no data. Please wait 20 seconds" + ANSI_RESET);
             }
         }
         boolean flag = true;
@@ -471,16 +489,20 @@ public class Main {
             }
             isFirstCall = false;
         } else {
-            for (Playlist playlist : currentUser.friendPlaylists) {
-                System.out.println("Name: " + playlist.getName());
-                System.out.println("ID: " + playlist.getId());
-                System.out.println("Tracks: {");
-                for (Track track : playlist.getTracks()) {
-                    System.out.println("Name: " + track.getName());
-                    System.out.println("Artist: " + track.getArtist());
-                    System.out.println("ID: " + track.getId());
+            try {
+                for (Playlist playlist : currentUser.friendPlaylists) {
+                    System.out.println("Name: " + playlist.getName());
+                    System.out.println("ID: " + playlist.getId());
+                    System.out.println("Tracks: {");
+                    for (Track track : playlist.getTracks()) {
+                        System.out.println("Name: " + track.getName());
+                        System.out.println("Artist: " + track.getArtist());
+                        System.out.println("ID: " + track.getId());
+                    }
+                    System.out.println("}");
                 }
-                System.out.println("}");
+            } catch (NullPointerException e) {
+                System.out.println(ANSI_RED + "There is no data. Please wait 20 seconds" + ANSI_RESET);
             }
         }
     }
@@ -500,8 +522,12 @@ public class Main {
             }
             isFirstCall = false;
         } else {
-            for (String request : currentUser.friendRequests) {
-                System.out.println("Name: " + request);
+            try {
+                for (String request : currentUser.friendRequests) {
+                    System.out.println("Name: " + request);
+                }
+            } catch (NullPointerException e) {
+                System.out.println(ANSI_RED + "There is no data. Please wait 20 seconds" + ANSI_RESET);
             }
         }
         boolean flag = true;
