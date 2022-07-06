@@ -82,6 +82,7 @@ public class Main {
         flag = true;
         isFirstCall = true;
         profileProcess();
+        isFirstCall = true;
         while (flag) {
             System.out.println("1-Profile\n2-Tracks\n3-Playlists\n4-Friends\n5-Upgrade\n6-Logout\n7-Exit");
             choice = input.nextInt();
@@ -459,7 +460,9 @@ public class Main {
         if (currentTime - start > 20 || isFirstCall) {
             try {
                 currentUser.friendRequests = premiumUsersApi.getFriendRequests();
-                System.out.println(currentUser.friendRequests);
+                for (String request : currentUser.friendRequests) {
+                    System.out.println("Name: " + request);
+                }
                 start = System.currentTimeMillis() / 1000;
             } catch (ApiException apiException) {
                 System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
