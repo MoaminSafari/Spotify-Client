@@ -26,7 +26,7 @@ public class Main {
     public static long start = 0;
     public static Tracks tracks;
     public static boolean isFirstCall = true;
-    public static String profile = "Try again after 20 seconds";
+    public static InlineResponse2003 profile;
     public static final String ANSI_RED = "\u001B[31m";
     public static final String ANSI_RESET = "\u001B[0m";
 
@@ -184,8 +184,9 @@ public class Main {
         long currentTime = System.currentTimeMillis() / 1000;
         if (currentTime - start > 20 || isFirstCall) {
             try {
-                profile = usersApi.getProfileInfo().toString();
-                System.out.println(profile);
+                profile = usersApi.getProfileInfo();
+                System.out.println("Username: " + profile.getUsername());
+                System.out.println("Premium Until: " + profile.getPremiumUntil());
                 start = System.currentTimeMillis() / 1000;
             } catch (ApiException apiException) {
                 System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
@@ -201,7 +202,12 @@ public class Main {
         if (currentTime - start > 20 || isFirstCall) {
             try {
                 tracks = usersApi.getTracksInfo();
-                System.out.println(tracks.toString());
+                for (Track track : tracks) {
+                    System.out.println("Name: " + track.getName());
+                    System.out.println("Artist: " + track.getArtist());
+                    System.out.println("ID: " + track.getId());
+                    System.out.println();
+                }
                 start = System.currentTimeMillis() / 1000;
             } catch (ApiException apiException) {
                 System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
@@ -253,7 +259,17 @@ public class Main {
         if (currentTime - start > 20 || isFirstCall) {
             try {
                 currentUser.playlists = usersApi.getPlaylistsInfo();
-                System.out.println(currentUser.playlists);
+                for (Playlist playlist : currentUser.playlists) {
+                    System.out.println("Name: " + playlist.getName());
+                    System.out.println("ID: " + playlist.getId());
+                    System.out.println("Tracks: {");
+                    for (Track track : playlist.getTracks()) {
+                        System.out.println("Name: " + track.getName());
+                        System.out.println("Artist: " + track.getArtist());
+                        System.out.println("ID: " + track.getId());
+                    }
+                    System.out.println("}");
+                }
                 start = System.currentTimeMillis() / 1000;
             } catch (ApiException apiException) {
                 System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
@@ -294,8 +310,10 @@ public class Main {
         System.out.println("Enter playlist's id:");
         int playlistId = input.nextInt();
         try {
-            System.out.println(usersApi.deletePlaylist(playlistId));
-            System.out.println("Playlist deleted");
+            InlineResponse2001 response = usersApi.deletePlaylist(playlistId);
+            if (response.isSuccess()) {
+                System.out.println("Playlist deleted");
+            }
         } catch (ApiException apiException) {
             System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
         }
@@ -309,8 +327,10 @@ public class Main {
         System.out.println("Enter playlist's id:");
         int playlistId = input.nextInt();
         try {
-            System.out.println(usersApi.addTrackToPlaylist(playlistId, trackId));
-            System.out.println("Song added to playlist");
+            InlineResponse2001 response = usersApi.addTrackToPlaylist(playlistId, trackId);
+            if (response.isSuccess()) {
+                System.out.println("Song added to playlist");
+            }
         } catch (ApiException apiException) {
             System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
         }
@@ -323,8 +343,10 @@ public class Main {
         System.out.println("Enter playlist's id:");
         int playlistId = input.nextInt();
         try {
-            System.out.println(usersApi.removeTrackFromPlaylist(playlistId, trackId));
-            System.out.println("Song deleted from playlist");
+            InlineResponse2001 response = usersApi.removeTrackFromPlaylist(playlistId, trackId);
+            if (response.isSuccess()) {
+                System.out.println("Song deleted from playlist");
+            }
         } catch (ApiException apiException) {
             System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
         }
@@ -362,7 +384,9 @@ public class Main {
         if (currentTime - start > 20 || isFirstCall) {
             try {
                 currentUser.friends = premiumUsersApi.getFriends();
-                System.out.println(currentUser.friends);
+                for (String friend : currentUser.friends) {
+                    System.out.println("Name: " + friend);
+                }
                 start = System.currentTimeMillis() / 1000;
             } catch (ApiException apiException) {
                 System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
@@ -395,7 +419,17 @@ public class Main {
         if (currentTime - start > 20 || isFirstCall) {
             try {
                 currentUser.friendPlaylists = premiumUsersApi.getFriendPlaylists(friendUsername);
-                System.out.println(currentUser.friendPlaylists);
+                for (Playlist playlist : currentUser.friendPlaylists) {
+                    System.out.println("Name: " + playlist.getName());
+                    System.out.println("ID: " + playlist.getId());
+                    System.out.println("Tracks: {");
+                    for (Track track : playlist.getTracks()) {
+                        System.out.println("Name: " + track.getName());
+                        System.out.println("Artist: " + track.getArtist());
+                        System.out.println("ID: " + track.getId());
+                    }
+                    System.out.println("}");
+                }
                 start = System.currentTimeMillis() / 1000;
             } catch (ApiException apiException) {
                 System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
@@ -442,7 +476,10 @@ public class Main {
         System.out.println("Enter User's username:");
         String username = input.next();
         try {
-            System.out.println(premiumUsersApi.addFriend(username));
+            InlineResponse2006 response = premiumUsersApi.addFriend(username);
+            if (response.isSuccess()) {
+                System.out.println("Friend request accepted");
+            }
         } catch (ApiException apiException) {
             System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
         }
@@ -453,7 +490,10 @@ public class Main {
         System.out.println("Enter User's username:");
         String username = input.next();
         try {
-            System.out.println(premiumUsersApi.addFriend(username));
+            InlineResponse2006 response = premiumUsersApi.addFriend(username);
+            if (response.isSuccess()) {
+                System.out.println("Friend request sent");
+            }
         } catch (ApiException apiException) {
             System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
         }
@@ -461,7 +501,10 @@ public class Main {
 
     public static void upgradeProcess() {
         try {
-            System.out.println(usersApi.upgradeToPremium());
+            InlineResponse2005 response = usersApi.upgradeToPremium();
+            if (response.isSuccess()) {
+                System.out.println("Account upgraded successfully until: " + response.getPremiumUntil());
+            }
             premiumUsersApi = new PremiumUsersApi(defaultClient);
         } catch (ApiException apiException) {
             System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
