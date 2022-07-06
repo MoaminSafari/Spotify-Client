@@ -200,7 +200,8 @@ public class Main {
             }
             isFirstCall = false;
         } else {
-            System.out.println(profile);
+            System.out.println("Username: " + profile.getUsername());
+            System.out.println("Premium Until: " + profile.getPremiumUntil());
         }
     }
 
@@ -223,7 +224,15 @@ public class Main {
                 System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
             }
         } else {
-            System.out.println(tracks);
+            for (Track track : tracks) {
+                if (track.isIsPremium() == false
+                        || (track.isIsPremium() == true && profile.getPremiumUntil() != null)) {
+                    System.out.println("Name: " + track.getName());
+                    System.out.println("Artist: " + track.getArtist());
+                    System.out.println("ID: " + track.getId());
+                    System.out.println();
+                }
+            }
         }
     }
 
@@ -286,7 +295,17 @@ public class Main {
             }
             isFirstCall = false;
         } else {
-            System.out.println(currentUser.playlists);
+            for (Playlist playlist : currentUser.playlists) {
+                System.out.println("Name: " + playlist.getName());
+                System.out.println("ID: " + playlist.getId());
+                System.out.println("Tracks: {");
+                for (Track track : playlist.getTracks()) {
+                    System.out.println("Name: " + track.getName());
+                    System.out.println("Artist: " + track.getArtist());
+                    System.out.println("ID: " + track.getId());
+                }
+                System.out.println("}");
+            }
         }
 
         boolean flag = true;
@@ -407,7 +426,9 @@ public class Main {
             }
             isFirstCall = false;
         } else {
-            System.out.println(currentUser.friends);
+            for (String friend : currentUser.friends) {
+                System.out.println("Name: " + friend);
+            }
         }
         boolean flag = true;
         while (flag) {
@@ -450,7 +471,17 @@ public class Main {
             }
             isFirstCall = false;
         } else {
-            System.out.println(currentUser.friendPlaylists);
+            for (Playlist playlist : currentUser.friendPlaylists) {
+                System.out.println("Name: " + playlist.getName());
+                System.out.println("ID: " + playlist.getId());
+                System.out.println("Tracks: {");
+                for (Track track : playlist.getTracks()) {
+                    System.out.println("Name: " + track.getName());
+                    System.out.println("Artist: " + track.getArtist());
+                    System.out.println("ID: " + track.getId());
+                }
+                System.out.println("}");
+            }
         }
     }
 
@@ -469,7 +500,9 @@ public class Main {
             }
             isFirstCall = false;
         } else {
-            System.out.println(currentUser.friendRequests);
+            for (String request : currentUser.friendRequests) {
+                System.out.println("Name: " + request);
+            }
         }
         boolean flag = true;
         while (flag) {
