@@ -3,12 +3,15 @@ import io.swagger.client.ApiException;
 import io.swagger.client.Configuration;
 import io.swagger.client.api.AuthApi;
 import io.swagger.client.api.DefaultApi;
+import io.swagger.client.api.PremiumUsersApi;
 import io.swagger.client.api.UsersApi;
 import io.swagger.client.auth.ApiKeyAuth;
 import io.swagger.client.auth.OAuth;
-import io.swagger.client.model.AuthLoginBody;
-import io.swagger.client.model.AuthSignupBody;
+import io.swagger.client.model.*;
 
+import java.io.Console;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
@@ -18,12 +21,14 @@ public class Main {
     public static DefaultApi defaultApi;
     public static AuthApi authApi;
     public static UsersApi usersApi;
+    public static PremiumUsersApi premiumUsersApi;
     public static User currentUser;
     public static long start = 0;
-    public static String tracks;
+    public static Tracks tracks;
     public static boolean isFirstCall = true;
-
-    public static String profile;
+    public static String profile = "Try again after 20 seconds";
+    public static final String ANSI_RED = "\u001B[31m";
+    public static final String ANSI_RESET = "\u001B[0m";
 
     public static void main(String[] args) {
         authAPIKey();
@@ -39,39 +44,51 @@ public class Main {
                     flag = loginProcess();
                 }
             }
-            break;
+                break;
             case 2: {
                 while (!flag) {
                     flag = signupProcess();
                 }
+                flag = false;
+                while (!flag) {
+                    flag = loginProcess();
+                }
             }
-            break;
+                break;
         }
         flag = true;
         while (flag) {
-            System.out.println("1-Profile\n2-Tracks\n3-Playlists\n4-Logout\n5-Exit");
+            System.out.println("1-Profile\n2-Tracks\n3-Playlists\n4-Friends\n5-Upgrade\n6-Logout\n7-Exit");
             choice = input.nextInt();
             switch (choice) {
                 case 1: {
                     profileProcess();
                 }
-                break;
+                    break;
                 case 2: {
                     tracksProcess();
                 }
-                break;
+                    break;
                 case 3: {
                     playlistsProcess();
                 }
-                break;
+                    break;
                 case 4: {
+                    friendsProcess();
+                }
+                    break;
+                case 5: {
+                    upgradeProcess();
+                }
+                    break;
+                case 6: {
                     logoutProcess();
                 }
-                break;
-                case 5: {
+                    break;
+                case 7: {
                     flag = false;
                 }
-                break;
+                    break;
             }
         }
 
@@ -84,94 +101,84 @@ public class Main {
         defaultApi = new DefaultApi();
         authApi = new AuthApi(defaultClient);
         usersApi = new UsersApi(defaultClient);
+        premiumUsersApi = new PremiumUsersApi(defaultClient);
     }
 
     public static void apiCheck() {
         try {
             defaultApi.ping();
-            if (defaultApi.reset().isSuccess()) {
-                System.out.println("API is working");
-            }
+            System.out.println("API is working");
         } catch (ApiException apiException) {
-            System.out.println(apiException.getResponseBody());
+            System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
         }
     }
 
     public static boolean loginProcess() {
+        Console console = System.console();
         Scanner input = new Scanner(System.in);
         System.out.println("Enter username:");
         String username = input.next();
-        System.out.println("Enter password:");
-        String password = input.next();
+        String password = new String(console.readPassword("Enter password: "));
 
-        String token = "";
+        String token;
         try {
             AuthLoginBody authLoginBody = new AuthLoginBody();
             authLoginBody.setUsername(username);
             authLoginBody.setPassword(password);
             token = (authApi.login(authLoginBody).getToken());
-            currentUser = new User(username, password);
+            currentUser = new User(username, password, token);
             System.out.println("You successfully logged in");
-            currentUser.token = token;
             defaultClient.setAccessToken(currentUser.token);
             OAuth bearerAuth = (OAuth) defaultClient.getAuthentication("bearerAuth");
             bearerAuth.setAccessToken(currentUser.token);
-            currentUser = new User(username, password);
-            currentUser.token = token;
             return true;
         } catch (ApiException apiException) {
             String errorResponse = apiException.getResponseBody();
-            System.out.println(errorResponse);
+            System.out.println(ANSI_RED + errorResponse + ANSI_RESET);
             return false;
         }
     }
 
     public static boolean signupProcess() {
+        Console console = System.console();
         Scanner input = new Scanner(System.in);
         System.out.println("Enter username:");
         String username = input.next(), password = "";
 
         boolean flag = true;
         while (flag) {
-            System.out.println("Enter password:");
-            password = input.next();
+            password = new String(console.readPassword("Enter password: "));
             if (validatePassword(password) != null) {
                 flag = false;
             } else {
-                System.out.println("Password must be at least 8 characters long and contain at least one number, one uppercase and one lowercase letter");
+                System.out.println(
+                        "Password must be at least 8 characters long and contain at least one number, one uppercase and one lowercase letter");
             }
         }
 
-        String token = "";
+        String token;
         try {
             AuthSignupBody authSignupBody = new AuthSignupBody();
             authSignupBody.setUsername(username);
             authSignupBody.setPassword(password);
             token = authApi.signUp(authSignupBody).getToken();
-            currentUser = new User(username, password);
-            System.out.println("You successfully signed up");
-            currentUser.token = token;
-            defaultClient.setAccessToken(currentUser.token);
-            OAuth bearerAuth = (OAuth) defaultClient.getAuthentication("bearerAuth");
-            bearerAuth.setAccessToken(currentUser.token);
-            currentUser = new User(username, password);
-            currentUser.token = token;
+            currentUser = new User(username, password, token);
+            System.out.println("You successfully signed up, now you can login");
             return true;
         } catch (ApiException apiException) {
-            System.out.println(apiException.getResponseBody());
+            System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
             return false;
         }
     }
 
     public static String validatePassword(String value) {
-        Pattern regex = Pattern.compile("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$");
+        Pattern regex = Pattern.compile("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?\\d).{8,}$");
         if (regex.matcher(value).matches()) {
             return value;
         } else {
             return null;
         }
     }
-
 
     public static void profileProcess() {
         long currentTime = System.currentTimeMillis() / 1000;
@@ -180,11 +187,10 @@ public class Main {
                 profile = usersApi.getProfileInfo().toString();
                 System.out.println(profile);
                 start = System.currentTimeMillis() / 1000;
-                isFirstCall = false;
             } catch (ApiException apiException) {
-                System.out.println(apiException.getResponseBody());
-                isFirstCall = false;
+                System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
             }
+            isFirstCall = false;
         } else {
             System.out.println(profile);
         }
@@ -194,11 +200,11 @@ public class Main {
         long currentTime = System.currentTimeMillis() / 1000;
         if (currentTime - start > 20 || isFirstCall) {
             try {
-                tracks = usersApi.getTracksInfo().toString();
-                System.out.println(tracks);
+                tracks = usersApi.getTracksInfo();
+                System.out.println(tracks.toString());
                 start = System.currentTimeMillis() / 1000;
             } catch (ApiException apiException) {
-                System.out.println(apiException.getResponseBody());
+                System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
             }
         } else {
             System.out.println(tracks);
@@ -206,10 +212,285 @@ public class Main {
     }
 
     public static void playlistsProcess() {
+        Scanner input = new Scanner(System.in);
+        boolean flag = true;
+        while (flag) {
+            System.out.println("1-Create playlist\n2-Get all playlists\n3-Exit");
+            int choice = input.nextInt();
+            switch (choice) {
+                case 1: {
+                    createPlaylistProcess();
+                }
+                    break;
+                case 2: {
+                    getAllPlaylistsProcess();
+                }
+                    break;
+                case 3: {
+                    flag = false;
+                }
+            }
+        }
 
     }
 
-    public static void logoutProcess() {
+    public static void createPlaylistProcess() {
+        Scanner input = new Scanner(System.in);
+        System.out.println("Enter playlist name:");
+        String playlistName = input.next();
+        try {
+            PlaylistsBody playlistsBody = new PlaylistsBody();
+            playlistsBody.setName(playlistName);
+            System.out.println("Playlist created successfully. ID: " + usersApi.createPlaylist(playlistsBody).getId());
+        } catch (ApiException apiException) {
+            System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
+        }
+    }
 
+    public static void getAllPlaylistsProcess() {
+        Scanner input = new Scanner(System.in);
+        long currentTime = System.currentTimeMillis() / 1000;
+        if (currentTime - start > 20 || isFirstCall) {
+            try {
+                currentUser.playlists = usersApi.getPlaylistsInfo();
+                System.out.println(currentUser.playlists);
+                start = System.currentTimeMillis() / 1000;
+            } catch (ApiException apiException) {
+                System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
+            }
+            isFirstCall = false;
+        } else {
+            System.out.println(currentUser.playlists);
+        }
+
+        boolean flag = true;
+        while (flag) {
+            System.out.println("1-Delete a playlist\n2-Add song to a playlist\n3-Delete song from a playlist\n4-Exit");
+            int choice = input.nextInt();
+            switch (choice) {
+                case 1: {
+                    deletePlaylistProcess();
+                }
+                    break;
+                case 2: {
+                    addSongToPlaylistProcess();
+                }
+                    break;
+                case 3: {
+                    deleteSongFromPlaylistProcess();
+                }
+                    break;
+                case 4: {
+                    flag = false;
+                }
+                    break;
+            }
+        }
+
+    }
+
+    public static void deletePlaylistProcess() {
+        Scanner input = new Scanner(System.in);
+        System.out.println("Enter playlist's id:");
+        int playlistId = input.nextInt();
+        try {
+            System.out.println(usersApi.deletePlaylist(playlistId));
+            System.out.println("Playlist deleted");
+        } catch (ApiException apiException) {
+            System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
+        }
+
+    }
+
+    public static void addSongToPlaylistProcess() {
+        Scanner input = new Scanner(System.in);
+        System.out.println("Enter track's id:");
+        String trackId = input.next();
+        System.out.println("Enter playlist's id:");
+        int playlistId = input.nextInt();
+        try {
+            System.out.println(usersApi.addTrackToPlaylist(playlistId, trackId));
+            System.out.println("Song added to playlist");
+        } catch (ApiException apiException) {
+            System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
+        }
+    }
+
+    public static void deleteSongFromPlaylistProcess() {
+        Scanner input = new Scanner(System.in);
+        System.out.println("Enter track's id:");
+        String trackId = input.next();
+        System.out.println("Enter playlist's id:");
+        int playlistId = input.nextInt();
+        try {
+            System.out.println(usersApi.removeTrackFromPlaylist(playlistId, trackId));
+            System.out.println("Song deleted from playlist");
+        } catch (ApiException apiException) {
+            System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
+        }
+    }
+
+    public static void friendsProcess() {
+        Scanner input = new Scanner(System.in);
+        boolean flag = true;
+        while (flag) {
+            System.out.println("1-Get all friends\n2-Get friend requests\n3-Send friend request\n4-Exit");
+            int choice = input.nextInt();
+            switch (choice) {
+                case 1: {
+                    getAllFriendsProcess();
+                }
+                    break;
+                case 2: {
+                    getFriendRequestsProcess();
+                }
+                    break;
+                case 3: {
+                    sendFriendRequestProcess();
+                }
+                    break;
+                case 4: {
+                    flag = false;
+                }
+            }
+        }
+    }
+
+    public static void getAllFriendsProcess() {
+        Scanner input = new Scanner(System.in);
+        long currentTime = System.currentTimeMillis() / 1000;
+        if (currentTime - start > 20 || isFirstCall) {
+            try {
+                currentUser.friends = premiumUsersApi.getFriends();
+                System.out.println(currentUser.friends);
+                start = System.currentTimeMillis() / 1000;
+            } catch (ApiException apiException) {
+                System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
+            }
+            isFirstCall = false;
+        } else {
+            System.out.println(currentUser.friends);
+        }
+        boolean flag = true;
+        while (flag) {
+            System.out.println("1-Get friend's playlists\n2-Exit");
+            int choice = input.nextInt();
+            switch (choice) {
+                case 1: {
+                    getFriendPlaylistsProcess();
+                }
+                    break;
+                case 2: {
+                    flag = false;
+                }
+            }
+        }
+    }
+
+    public static void getFriendPlaylistsProcess() {
+        Scanner input = new Scanner(System.in);
+        System.out.println("Enter friend's username:");
+        String friendUsername = input.next();
+        long currentTime = System.currentTimeMillis() / 1000;
+        if (currentTime - start > 20 || isFirstCall) {
+            try {
+                currentUser.friendPlaylists = premiumUsersApi.getFriendPlaylists(friendUsername);
+                System.out.println(currentUser.friendPlaylists);
+                start = System.currentTimeMillis() / 1000;
+            } catch (ApiException apiException) {
+                System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
+            }
+            isFirstCall = false;
+        } else {
+            System.out.println(currentUser.friendPlaylists);
+        }
+    }
+
+    public static void getFriendRequestsProcess() {
+        Scanner input = new Scanner(System.in);
+        long currentTime = System.currentTimeMillis() / 1000;
+        if (currentTime - start > 20 || isFirstCall) {
+            try {
+                currentUser.friendRequests = premiumUsersApi.getFriendRequests();
+                System.out.println(currentUser.friendRequests);
+                start = System.currentTimeMillis() / 1000;
+            } catch (ApiException apiException) {
+                System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
+            }
+            isFirstCall = false;
+        } else {
+            System.out.println(currentUser.friendRequests);
+        }
+        boolean flag = true;
+        while (flag) {
+            System.out.println("1-Accept friend request\n2-Exit");
+            int choice = input.nextInt();
+            switch (choice) {
+                case 1: {
+                    acceptFriendRequestProcess();
+                }
+                    break;
+                case 2: {
+                    flag = false;
+                }
+            }
+        }
+    }
+
+    public static void acceptFriendRequestProcess() {
+        Scanner input = new Scanner(System.in);
+        System.out.println("Enter User's username:");
+        String username = input.next();
+        try {
+            System.out.println(premiumUsersApi.addFriend(username));
+        } catch (ApiException apiException) {
+            System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
+        }
+    }
+
+    public static void sendFriendRequestProcess() {
+        Scanner input = new Scanner(System.in);
+        System.out.println("Enter User's username:");
+        String username = input.next();
+        try {
+            System.out.println(premiumUsersApi.addFriend(username));
+        } catch (ApiException apiException) {
+            System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
+        }
+    }
+
+    public static void upgradeProcess() {
+        try {
+            System.out.println(usersApi.upgradeToPremium());
+            premiumUsersApi = new PremiumUsersApi(defaultClient);
+        } catch (ApiException apiException) {
+            System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
+        }
+    }
+
+    public static void logoutProcess() {
+        Scanner input = new Scanner(System.in);
+        System.out.println("1-Login\n2-Signup");
+
+        int choice = input.nextInt();
+        boolean flag = false;
+        switch (choice) {
+            case 1: {
+                while (!flag) {
+                    flag = loginProcess();
+                }
+            }
+                break;
+            case 2: {
+                while (!flag) {
+                    flag = signupProcess();
+                }
+                flag = false;
+                while (!flag) {
+                    flag = loginProcess();
+                }
+            }
+                break;
+        }
     }
 }
