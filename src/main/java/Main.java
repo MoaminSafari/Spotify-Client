@@ -240,8 +240,7 @@ public class Main {
                     }
                 }
             } catch (NullPointerException e) {
-                System.out.println(ANSI_RED + ANSI_RED + "There is no data. Please wait 20 seconds" + ANSI_RESET
-                        + ANSI_RESET);
+                System.out.println(ANSI_RED + "There is no data. Please wait 20 seconds" + ANSI_RESET);
             }
         }
     }
@@ -296,6 +295,7 @@ public class Main {
                         System.out.println("Name: " + track.getName());
                         System.out.println("Artist: " + track.getArtist());
                         System.out.println("ID: " + track.getId());
+                        System.out.println();
                     }
                     System.out.println("}");
                 }
@@ -314,6 +314,7 @@ public class Main {
                         System.out.println("Name: " + track.getName());
                         System.out.println("Artist: " + track.getArtist());
                         System.out.println("ID: " + track.getId());
+                        System.out.println();
                     }
                     System.out.println("}");
                 }
@@ -350,7 +351,7 @@ public class Main {
 
     public static void deletePlaylistProcess() {
         Scanner input = new Scanner(System.in);
-        System.out.println("Enter playlist's id:");
+        System.out.println("Enter playlist's ID:");
         int playlistId = input.nextInt();
         try {
             InlineResponse2001 response = usersApi.deletePlaylist(playlistId);
@@ -365,9 +366,9 @@ public class Main {
 
     public static void addSongToPlaylistProcess() {
         Scanner input = new Scanner(System.in);
-        System.out.println("Enter track's id:");
+        System.out.println("Enter track's ID:");
         String trackId = input.next();
-        System.out.println("Enter playlist's id:");
+        System.out.println("Enter playlist's ID:");
         int playlistId = input.nextInt();
         try {
             InlineResponse2001 response = usersApi.addTrackToPlaylist(playlistId, trackId);
@@ -381,9 +382,9 @@ public class Main {
 
     public static void deleteSongFromPlaylistProcess() {
         Scanner input = new Scanner(System.in);
-        System.out.println("Enter track's id:");
+        System.out.println("Enter track's ID:");
         String trackId = input.next();
-        System.out.println("Enter playlist's id:");
+        System.out.println("Enter playlist's ID:");
         int playlistId = input.nextInt();
         try {
             InlineResponse2001 response = usersApi.removeTrackFromPlaylist(playlistId, trackId);
@@ -480,6 +481,7 @@ public class Main {
                         System.out.println("Name: " + track.getName());
                         System.out.println("Artist: " + track.getArtist());
                         System.out.println("ID: " + track.getId());
+                        System.out.println();
                     }
                     System.out.println("}");
                 }
@@ -498,6 +500,7 @@ public class Main {
                         System.out.println("Name: " + track.getName());
                         System.out.println("Artist: " + track.getArtist());
                         System.out.println("ID: " + track.getId());
+                        System.out.println();
                     }
                     System.out.println("}");
                 }
