@@ -33,9 +33,32 @@ public class Main {
     public static void main(String[] args) {
         authAPIKey();
         apiCheck();
-        Scanner input = new Scanner(System.in);
-        System.out.println("Welcome\n1-Login\n2-Signup");
+        System.out.println("Welcome to the Spotify API!");
+        MenuProcess();
+    }
 
+    public static void authAPIKey() {
+        defaultClient = Configuration.getDefaultApiClient();
+        ApiKeyAuth ApiKeyAuth = (ApiKeyAuth) defaultClient.getAuthentication("ApiKeyAuth");
+        ApiKeyAuth.setApiKey(MY_API_KEY);
+        defaultApi = new DefaultApi();
+        authApi = new AuthApi(defaultClient);
+        usersApi = new UsersApi(defaultClient);
+        premiumUsersApi = new PremiumUsersApi(defaultClient);
+    }
+
+    public static void apiCheck() {
+        try {
+            defaultApi.ping();
+            System.out.println("API is working");
+        } catch (ApiException apiException) {
+            System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
+        }
+    }
+
+    public static void MenuProcess() {
+        Scanner input = new Scanner(System.in);
+        System.out.println("1-Login\n2-Signup");
         int choice = input.nextInt();
         boolean flag = false;
         switch (choice) {
@@ -57,6 +80,8 @@ public class Main {
                 break;
         }
         flag = true;
+        isFirstCall = true;
+        profileProcess();
         while (flag) {
             System.out.println("1-Profile\n2-Tracks\n3-Playlists\n4-Friends\n5-Upgrade\n6-Logout\n7-Exit");
             choice = input.nextInt();
@@ -82,7 +107,8 @@ public class Main {
                 }
                     break;
                 case 6: {
-                    logoutProcess();
+                    MenuProcess();
+                    flag = false;
                 }
                     break;
                 case 7: {
@@ -90,26 +116,6 @@ public class Main {
                 }
                     break;
             }
-        }
-
-    }
-
-    public static void authAPIKey() {
-        defaultClient = Configuration.getDefaultApiClient();
-        ApiKeyAuth ApiKeyAuth = (ApiKeyAuth) defaultClient.getAuthentication("ApiKeyAuth");
-        ApiKeyAuth.setApiKey(MY_API_KEY);
-        defaultApi = new DefaultApi();
-        authApi = new AuthApi(defaultClient);
-        usersApi = new UsersApi(defaultClient);
-        premiumUsersApi = new PremiumUsersApi(defaultClient);
-    }
-
-    public static void apiCheck() {
-        try {
-            defaultApi.ping();
-            System.out.println("API is working");
-        } catch (ApiException apiException) {
-            System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
         }
     }
 
@@ -203,10 +209,13 @@ public class Main {
             try {
                 tracks = usersApi.getTracksInfo();
                 for (Track track : tracks) {
-                    System.out.println("Name: " + track.getName());
-                    System.out.println("Artist: " + track.getArtist());
-                    System.out.println("ID: " + track.getId());
-                    System.out.println();
+                    if (track.isIsPremium() == false
+                            || (track.isIsPremium() == true && profile.getPremiumUntil() != null)) {
+                        System.out.println("Name: " + track.getName());
+                        System.out.println("Artist: " + track.getArtist());
+                        System.out.println("ID: " + track.getId());
+                        System.out.println();
+                    }
                 }
                 start = System.currentTimeMillis() / 1000;
             } catch (ApiException apiException) {
@@ -353,6 +362,10 @@ public class Main {
     }
 
     public static void friendsProcess() {
+        if (profile.getPremiumUntil() == null) {
+            System.out.println("You don't have premium account");
+            return;
+        }
         Scanner input = new Scanner(System.in);
         boolean flag = true;
         while (flag) {
@@ -508,32 +521,6 @@ public class Main {
             premiumUsersApi = new PremiumUsersApi(defaultClient);
         } catch (ApiException apiException) {
             System.out.println(ANSI_RED + apiException.getResponseBody() + ANSI_RESET);
-        }
-    }
-
-    public static void logoutProcess() {
-        Scanner input = new Scanner(System.in);
-        System.out.println("1-Login\n2-Signup");
-
-        int choice = input.nextInt();
-        boolean flag = false;
-        switch (choice) {
-            case 1: {
-                while (!flag) {
-                    flag = loginProcess();
-                }
-            }
-                break;
-            case 2: {
-                while (!flag) {
-                    flag = signupProcess();
-                }
-                flag = false;
-                while (!flag) {
-                    flag = loginProcess();
-                }
-            }
-                break;
         }
     }
 }
